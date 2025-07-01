@@ -166,7 +166,10 @@ const Chatbot = ({ botName, persona, placeholder, icon }) => {
             const prompt = `${persona}\n\nUser request: "${input}"\n\nResponse:`;
             let chatHistory = [{ role: "user", parts: [{ text: prompt }] }];
             const payload = { contents: chatHistory };
-            const apiKey = ""; 
+            
+            // This line is updated to securely read the API key from Vercel's environment variables.
+            const apiKey = process.env.REACT_APP_GEMINI_API_KEY; 
+            
             const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${apiKey}`;
 
             const response = await fetch(apiUrl, {
@@ -174,6 +177,11 @@ const Chatbot = ({ botName, persona, placeholder, icon }) => {
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify(payload)
             });
+
+            if (!response.ok) {
+                throw new Error(`API request failed with status ${response.status}`);
+            }
+
             const result = await response.json();
 
             let botResponseText = "Sorry, I couldn't generate a response. Please try again.";
@@ -188,7 +196,7 @@ const Chatbot = ({ botName, persona, placeholder, icon }) => {
 
         } catch (error) {
             console.error("Error calling Gemini API:", error);
-            const errorMessage = { text: "There was an error connecting to the AI. Please check your connection and try again.", sender: 'bot' };
+            const errorMessage = { text: "There was an error connecting to the AI. Please check your API key and try again.", sender: 'bot' };
             setMessages(prev => [...prev, errorMessage]);
         } finally {
             setIsLoading(false);
